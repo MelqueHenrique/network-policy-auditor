@@ -1,0 +1,53 @@
+# =============================================================================
+# EXEMPLO DE POLITICA DE SEGURANCA DE REDE
+#
+# Arquivo puramente ilustrativo, criado para demonstrar a ESTRUTURA aceita
+# pelo validador. Nao corresponde a nenhuma rede real: os enderecos usados
+# pertencem a faixa 192.0.2.0/24, reservada pela RFC 5737 exclusivamente
+# para documentacao, e os dominios usam example.com, reservado pela RFC 2606.
+#
+# Substitua os valores pelos da sua rede antes de executar.
+# Os tres blocos sao independentes: use apenas os que fizerem sentido.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# BLOCO 1 - ACESSIBILIDADE EM REDE (ativos internos)
+# Lista de PERMISSOES: declare as portas que devem estar acessiveis.
+#   porta aberta fora da lista  -> VIOLACAO
+#   porta da lista sem resposta -> FALHA DE DISPONIBILIDADE
+# -----------------------------------------------------------------------------
+regras_internas:
+  - ip: "192.0.2.10"
+    nome: "Servidor de Arquivos"
+    portas_tcp_permitidas: [139, 445]
+
+  - ip: "192.0.2.20"
+    nome: "Servidor de Aplicacao"
+    # Somente acesso remoto administrativo autorizado
+    portas_tcp_permitidas: [3389]
+
+# -----------------------------------------------------------------------------
+# BLOCO 2 - DEPENDENCIAS EXTERNAS (nuvem e parceiros)
+# Mesma logica de permissoes, porem o campo 'ip' aceita nome de dominio.
+# Aqui a ausencia de resposta indica indisponibilidade de um servico
+# necessario a operacao, e nao uma falha de seguranca.
+# -----------------------------------------------------------------------------
+regras_externas:
+  - ip: "aplicacao.example.com"
+    nome: "Sistema corporativo em nuvem"
+    portas_tcp_permitidas: [443]
+
+  - ip: "parceiro.example.com"
+    nome: "Servico de parceiro externo"
+    portas_tcp_permitidas: [443]
+
+# -----------------------------------------------------------------------------
+# BLOCO 3 - ISOLAMENTO E RESTRICAO (fronteiras entre segmentos)
+# Lista de PROIBICOES, com a logica invertida: qualquer porta que responda
+# indica que a fronteira NAO esta sendo aplicada pela rede.
+#   porta proibida respondeu -> FALHA DE ISOLAMENTO (critico)
+# -----------------------------------------------------------------------------
+regras_isolamento:
+  - ip: "192.0.2.100"
+    nome: "Estacao de outro segmento de rede"
+    portas_proibidas: [135, 139, 445, 3389]
